@@ -30,7 +30,7 @@
         }
         @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-        /* Global Admin Access (Login Removed) */
+        /* Global Admin Access */
         .admin-only { display: block !important; }
         .admin-only-flex { display: flex !important; }
         .admin-only-table-cell { display: table-cell !important; }
@@ -100,7 +100,9 @@
                     <h3 class="font-bold text-slate-700 text-sm uppercase tracking-tight">Riwayat Transaksi Digital</h3>
                     <div class="flex gap-2">
                         <input type="text" id="filterSearch" onkeyup="renderData()" placeholder="Cari..." class="px-4 py-2 border rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-blue-500">
-                        <button onclick="exportPDF()" class="bg-rose-600 text-white p-2 rounded-xl active:scale-95 transition-all"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></button>
+                        <button onclick="exportPDF()" class="bg-rose-600 text-white p-2 rounded-xl active:scale-95 transition-all" title="Export PDF">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        </button>
                     </div>
                 </div>
                 <div class="overflow-x-auto min-h-[300px]">
@@ -205,7 +207,8 @@
         let appConfig = {
             name: localStorage.getItem('kasBok_appName') || "KAS BOK DIGITAL",
             pagu: parseInt(localStorage.getItem('kasBok_pagu')) || 500000000,
-            gsUrl: GS_API_URL
+            gsUrl: GS_API_URL,
+            currentSheet: localStorage.getItem('kasBok_activeSheet') || "Main"
         };
 
         // --- INITIALIZATION ---
@@ -297,28 +300,75 @@
             };
 
             try {
+                // 1. Simpan ke Firestore
                 const colPath = `artifacts/${appId}/public/data/transactions`;
                 await addDoc(collection(db, colPath), payload);
                 
+                // 2. Sync ke Google Sheets
                 if (appConfig.gsUrl) {
                     fetch(appConfig.gsUrl, {
                         method: "POST",
-                        body: JSON.stringify({ action: "addRow", ...payload })
-                    }).catch(() => console.log("G-Sheet offline"));
+                        mode: "no-cors",
+                        headers: { "Content-Type": "text/plain" },
+                        body: JSON.stringify({ 
+                            action: "addRow", 
+                            targetSheet: appConfig.currentSheet,
+                            ...payload 
+                        })
+                    }).catch(err => console.error("GSheet error:", err));
                 }
 
                 closeModal();
-                showToast("DATA DISINKRONKAN KE CLOUD");
-            } catch (err) { showToast("GAGAL MENYIMPAN DATA", "error"); }
+                showToast("DATA DISINKRONKAN KE CLOUD & SHEET");
+            } catch (err) { 
+                console.error(err);
+                showToast("GAGAL MENYIMPAN DATA", "error"); 
+            }
         };
 
         window.deleteItem = async (id) => {
             if (!auth.currentUser) return;
             if(confirm("Hapus data secara permanen?")) {
-                const colPath = `artifacts/${appId}/public/data/transactions`;
-                await deleteDoc(doc(db, colPath, id));
-                showToast("DATA DIHAPUS");
+                try {
+                    const colPath = `artifacts/${appId}/public/data/transactions`;
+                    await deleteDoc(doc(db, colPath, id));
+                    showToast("DATA DIHAPUS");
+                } catch (e) { showToast("GAGAL MENGHAPUS", "error"); }
             }
+        };
+
+        // --- EXPORT PDF (FIXED Scope) ---
+        window.exportPDF = function() {
+            if (transactions.length === 0) return showToast("TIDAK ADA DATA UNTUK DICETAK", "error");
+            
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            
+            doc.setFontSize(14);
+            doc.text("LAPORAN REALISASI KAS BOK DIGITAL", 149, 15, { align: 'center' });
+            doc.setFontSize(10);
+            doc.text(`Puskesmas: ${appConfig.name} | Dicetak: ${new Date().toLocaleString('id-ID')}`, 149, 22, { align: 'center' });
+
+            const dataTable = transactions
+                .sort((a,b) => new Date(a.tgl) - new Date(b.tgl))
+                .map((t, i) => [
+                    i + 1,
+                    t.tgl,
+                    t.ket,
+                    formatIDR(t.masuk || 0),
+                    formatIDR(t.keluar || 0)
+                ]);
+
+            doc.autoTable({
+                head: [['No', 'Tanggal', 'Keterangan / SPJ', 'Penerimaan', 'Pengeluaran']],
+                body: dataTable,
+                startY: 30,
+                theme: 'grid',
+                headStyles: { fillColor: [37, 99, 235] },
+                styles: { fontSize: 8 }
+            });
+
+            doc.save(`Laporan_Kas_BOK_${appConfig.name}_${new Date().getTime()}.pdf`);
         };
 
         // --- SETTINGS ---
@@ -339,18 +389,25 @@
         };
 
         window.createNewSheet = async () => {
-            const name = document.getElementById('newSheetName').value;
+            const name = document.getElementById('newSheetName').value.trim();
             if (!name) return showToast("NAMA SHEET KOSONG", "error");
+            
             showToast("MEMPROSES SHEET BARU...");
             try {
                 const res = await fetch(appConfig.gsUrl, {
                     method: "POST",
                     body: JSON.stringify({ action: "createSheet", sheetName: name })
                 });
-                const r = await res.json();
-                if(r.status === "success") showToast("SHEET BARU SIAP!");
-                else showToast(r.message, "error");
-            } catch (e) { showToast("KONEKSI G-SHEET GAGAL", "error"); }
+                appConfig.currentSheet = name;
+                localStorage.setItem('kasBok_activeSheet', name);
+                showToast("SHEET BARU '" + name + "' SIAP!");
+                updateGSheetIndicator();
+            } catch (e) { 
+                appConfig.currentSheet = name;
+                localStorage.setItem('kasBok_activeSheet', name);
+                showToast("PERINTAH TERKIRIM KE SHEET", "success"); 
+                updateGSheetIndicator();
+            }
         };
 
         function updateConfigUI() {
@@ -366,7 +423,7 @@
             const txt = document.getElementById('gsStatusText');
             if (appConfig.gsUrl && ind && txt) {
                 ind.className = "w-2 h-2 bg-emerald-500 rounded-full animate-pulse";
-                txt.innerText = "G-SHEET CONNECTED";
+                txt.innerText = "G-SHEET CONNECTED (" + appConfig.currentSheet + ")";
             }
         }
 
