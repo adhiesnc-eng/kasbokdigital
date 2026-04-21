@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KAS BOK AI - Google Sheets Integrated</title>
+    <title>KAS BOK AI - Dashboard Utama</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <!-- Libraries -->
@@ -17,107 +17,34 @@
 
         /* Animations */
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
+        .animate-in { animation: fadeInUp 0.6s ease-out forwards; }
         
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-        .shake { animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both; }
-
-        .floating-label-group { position: relative; }
-        .floating-label-group input:focus ~ label,
-        .floating-label-group input:not(:placeholder-shown) ~ label {
-            top: -10px;
-            left: 12px;
-            font-size: 10px;
-            color: #2563eb;
-            background-color: white;
-            padding: 0 4px;
-        }
-        .floating-label-group label {
-            position: absolute;
-            top: 50%;
-            left: 45px;
-            transform: translateY(-50%);
-            transition: all 0.2s ease;
-            pointer-events: none;
-            color: #94a3b8;
-            font-weight: 500;
-        }
-
         .glass-nav { background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(12px); }
         .hidden { display: none !important; }
-        .admin-only { display: none; }
-        body.is-admin .admin-only { display: block !important; }
-        body.is-admin .admin-only-flex { display: flex !important; }
-        body.is-admin .admin-only-table-cell { display: table-cell !important; }
+        
+        /* Shimmer Effect for Loading */
+        .shimmer {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+
+        /* Global Admin Access (Login Removed) */
+        .admin-only { display: block !important; }
+        .admin-only-flex { display: flex !important; }
+        .admin-only-table-cell { display: table-cell !important; }
     </style>
-
-    <!-- PWA Settings by it.adi.p -->
-    <meta name="theme-color" content="#3b82f6">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
 </head>
-<body class="bg-slate-50 text-slate-900 min-h-screen">
-
-    <!-- LOGIN SCREEN -->
-    <div id="loginSection" class="min-h-screen flex items-center justify-center p-6 bg-gradient-to-br from-slate-900 via-slate-800 to-teal-900">
-        <div class="w-full max-w-md bg-white rounded-[2.5rem] shadow-2xl overflow-hidden fade-in-up">
-            <div class="p-10">
-                <div class="text-center mb-8">
-                    <div class="inline-flex items-center justify-center w-20 h-20 bg-teal-50 rounded-3xl mb-4 text-teal-600 shadow-inner">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg>
-                    </div>
-                    <h2 class="text-2xl font-black text-slate-800 tracking-tight text-center uppercase leading-tight">KAS BOK DIGITAL</h2>
-                    <p class="text-xs text-teal-600 font-bold uppercase tracking-widest mt-1 text-center">G-Sheet Sync Enabled</p>
-                </div>
-
-                <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
-                    <div class="floating-label-group">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                        </div>
-                        <input type="text" id="username" placeholder=" " required class="w-full pl-12 pr-4 py-4 border-2 border-slate-100 rounded-2xl focus:border-teal-500 outline-none transition-all font-bold">
-                        <label>Username</label>
-                    </div>
-
-                    <div class="floating-label-group">
-                        <div class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                        </div>
-                        <input type="password" id="password" placeholder=" " required class="w-full pl-12 pr-4 py-4 border-2 border-slate-100 rounded-2xl focus:border-teal-500 outline-none transition-all font-bold">
-                        <label>Password</label>
-                    </div>
-
-                    <div class="flex items-center gap-2 px-2">
-                        <input type="checkbox" id="captcha" class="w-4 h-4 rounded text-teal-600 cursor-pointer">
-                        <label for="captcha" class="text-[10px] font-black text-slate-400 uppercase cursor-pointer uppercase">I'm not a robot</label>
-                    </div>
-
-                    <button type="submit" id="btnLogin" class="w-full py-4 bg-teal-600 hover:bg-teal-700 text-white font-black rounded-2xl transition-all shadow-xl uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95">
-                        <span id="loginText">Masuk Aplikasi</span>
-                        <div id="loginSpinner" class="hidden w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    </button>
-                </form>
-
-                <div class="mt-8 text-center space-y-2 border-t border-slate-50 pt-6">
-                    <p class="text-[9px] font-black text-slate-300 uppercase">Admin: admin / adminbok2026</p>
-                    <p class="text-[9px] font-black text-slate-300 uppercase">User: user / userbok2026</p>
-                </div>
-            </div>
-        </div>
-    </div>
+<body class="bg-slate-50 text-slate-900 min-h-screen is-admin">
 
     <!-- MAIN APP CONTENT -->
-    <div id="appSection" class="hidden">
+    <div id="appSection">
         <nav class="glass-nav border-b sticky top-0 z-40 px-4 py-3">
             <div class="max-w-7xl mx-auto flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <div class="bg-blue-600 p-2 rounded-xl text-white">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4M3 5v14a2 2 0 0 0 2 2h16v-5M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
+                    <div class="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
                     </div>
                     <div>
                         <h1 id="appTitle" class="text-lg font-bold tracking-tight text-slate-800 leading-none uppercase">KAS BOK DIGITAL</h1>
@@ -125,17 +52,16 @@
                             <span id="gsIndicator" class="w-2 h-2 bg-slate-300 rounded-full"></span>
                             <span id="gsStatusText">G-SHEET DISCONNECTED</span>
                             <span class="mx-1 text-slate-300">•</span>
-                            <span id="roleBadge" class="text-blue-600 font-black uppercase">PENGGUNA</span>
+                            <span id="roleBadge" class="text-blue-600 font-black uppercase">ADMINISTRATOR</span>
                         </div>
                     </div>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <button onclick="openSettings()" class="admin-only p-2 text-slate-400 hover:text-blue-600 transition-colors">
+                    <button onclick="openSettings()" class="p-2 text-slate-400 hover:text-blue-600 transition-colors" title="Pengaturan">
                         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.72V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.17a2 2 0 0 1 1-1.74l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/></svg>
                     </button>
-                    <button onclick="handleLogout()" class="px-4 py-2 border border-slate-200 rounded-xl text-[10px] font-black text-slate-400 uppercase hover:bg-slate-100 transition-all">Logout</button>
-                    <button onclick="openModal()" class="admin-only bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-sm font-bold shadow-xl active:scale-95 flex items-center gap-2">
+                    <button onclick="openModal()" class="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-sm font-bold shadow-xl active:scale-95 flex items-center gap-2">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12h14M12 5v14"/></svg>
                         Input Data
                     </button>
@@ -185,7 +111,7 @@
                                 <th class="px-6 py-4">Keterangan</th>
                                 <th class="px-6 py-4 text-right">Masuk</th>
                                 <th class="px-6 py-4 text-right">Keluar</th>
-                                <th class="px-6 py-4 text-center admin-only-table-cell">Aksi</th>
+                                <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody" class="divide-y divide-slate-100"></tbody>
@@ -282,7 +208,7 @@
             gsUrl: GS_API_URL
         };
 
-        // --- AUTH & INITIALIZATION (RULE 3) ---
+        // --- INITIALIZATION ---
         async function startApp() {
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
@@ -301,72 +227,18 @@
         onAuthStateChanged(auth, (user) => {
             if (user && authReady) {
                 setupDataListener();
-                const role = sessionStorage.getItem('kasBokRole');
-                if (role) applyRole(role);
             }
         });
 
         window.addEventListener('DOMContentLoaded', () => {
-            const role = sessionStorage.getItem('kasBokRole');
-            if (role) {
-                document.getElementById('loginSection').classList.add('hidden');
-                document.getElementById('appSection').classList.remove('hidden');
-            }
             updateConfigUI();
             startApp();
         });
 
-        // --- LOGIN LOGIC ---
-        window.handleLogin = (e) => {
-            e.preventDefault();
-            const userInp = document.getElementById('username').value;
-            const passInp = document.getElementById('password').value;
-            const captcha = document.getElementById('captcha');
-            
-            if(!captcha.checked) { showToast("CENTANG CAPTCHA", "error"); return; }
-
-            let role = null;
-            if (userInp === 'admin' && passInp === 'adminbok2026') role = 'admin';
-            else if (userInp === 'user' && passInp === 'userbok2026') role = 'user';
-
-            if (role) {
-                document.getElementById('loginText').classList.add('hidden');
-                document.getElementById('loginSpinner').classList.remove('hidden');
-                setTimeout(() => {
-                    sessionStorage.setItem('kasBokRole', role);
-                    applyRole(role);
-                    if (authReady) setupDataListener();
-                }, 1000);
-            } else {
-                showToast("USER/PASSWORD SALAH!", "error");
-                shakeForm();
-            }
-        };
-
-        function shakeForm() {
-            const f = document.getElementById('loginForm');
-            f.classList.add('shake');
-            setTimeout(() => f.classList.remove('shake'), 500);
-        }
-
-        function applyRole(role) {
-            document.getElementById('loginSection').classList.add('hidden');
-            document.getElementById('appSection').classList.remove('hidden');
-            const badge = document.getElementById('roleBadge');
-            if(badge) badge.innerText = role === 'admin' ? "ADMINISTRATOR" : "PEMIRSA (VIEW-ONLY)";
-            document.body.classList.toggle('is-admin', role === 'admin');
-        }
-
-        window.handleLogout = () => {
-            sessionStorage.removeItem('kasBokRole');
-            window.location.reload();
-        };
-
-        // --- FIRESTORE LOGIC (RULE 1) ---
+        // --- FIRESTORE LOGIC ---
         function setupDataListener() {
             if (!auth.currentUser) return;
             
-            // Menggunakan backticks untuk appId sesuai Rule 1
             const collectionPath = `artifacts/${appId}/public/data/transactions`;
             onSnapshot(collection(db, collectionPath), 
                 (snap) => {
@@ -377,9 +249,6 @@
                 }, 
                 (error) => {
                     console.error("Firestore error:", error);
-                    if(error.code === 'permission-denied') {
-                        showToast("IZIN DITOLAK: OTENTIKASI ULANG", "error");
-                    }
                 }
             );
         }
@@ -390,7 +259,6 @@
             const searchInput = document.getElementById('filterSearch');
             const search = searchInput ? searchInput.value.toLowerCase() : "";
             tbody.innerHTML = '';
-            const isAdmin = sessionStorage.getItem('kasBokRole') === 'admin';
 
             transactions
                 .filter(t => (t.ket||'').toLowerCase().includes(search))
@@ -403,7 +271,7 @@
                         <td class="px-6 py-4 font-black uppercase text-slate-800 text-xs">${t.ket}</td>
                         <td class="px-6 py-4 text-right text-emerald-600 font-black text-xs">${t.masuk ? formatIDR(t.masuk) : '-'}</td>
                         <td class="px-6 py-4 text-right text-rose-600 font-black text-xs">${t.keluar ? formatIDR(t.keluar) : '-'}</td>
-                        <td class="px-6 py-4 text-center admin-only-table-cell ${isAdmin ? '' : 'hidden'}">
+                        <td class="px-6 py-4 text-center">
                             <button onclick="deleteItem('${t.id}')" class="p-2 text-slate-300 hover:text-rose-600 transition-all">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
                             </button>
@@ -424,7 +292,7 @@
                 ket: document.getElementById('inputKet').value.toUpperCase(),
                 masuk: type === 'masuk' ? amount : 0,
                 keluar: type === 'keluar' ? amount : 0,
-                pencatat: sessionStorage.getItem('kasBokRole'),
+                pencatat: "ADMIN",
                 createdAt: new Date().toISOString()
             };
 
@@ -432,7 +300,6 @@
                 const colPath = `artifacts/${appId}/public/data/transactions`;
                 await addDoc(collection(db, colPath), payload);
                 
-                // Sync ke Google Sheets secara background
                 if (appConfig.gsUrl) {
                     fetch(appConfig.gsUrl, {
                         method: "POST",
@@ -450,11 +317,11 @@
             if(confirm("Hapus data secara permanen?")) {
                 const colPath = `artifacts/${appId}/public/data/transactions`;
                 await deleteDoc(doc(db, colPath, id));
-                showToast("DATA DIHAPUS DARI CLOUD");
+                showToast("DATA DIHAPUS");
             }
         };
 
-        // --- SETTINGS & HELPERS ---
+        // --- SETTINGS ---
         window.openSettings = () => {
             document.getElementById('setAppName').value = appConfig.name;
             document.getElementById('setGsUrl').value = appConfig.gsUrl;
@@ -515,8 +382,6 @@
         function updateChart() {
             const ctx = document.getElementById('mainChart');
             if (!ctx) return;
-            
-            // Hitung total bulanan untuk 6 bulan terakhir (simulasi sederhana)
             const realization = transactions.reduce((a,b) => a + (b.keluar || 0), 0);
             const budget = appConfig.pagu;
 
@@ -552,57 +417,7 @@
         window.openModal = () => document.getElementById('modalEntry').classList.remove('hidden');
         window.closeModal = () => { document.getElementById('modalEntry').classList.add('hidden'); document.getElementById('transactionForm').reset(); document.getElementById('inputTgl').valueAsDate = new Date(); };
         const formatIDR = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
-        window.togglePassword = () => { 
-            const p = document.getElementById('password'); 
-            p.type = p.type === 'password' ? 'text' : 'password'; 
-        };
         document.getElementById('inputTgl').valueAsDate = new Date();
-    </script>
-
-    <!-- Floating Install Prompt UI -->
-    <div id="pwa-install-banner" style="display:none; position:fixed; bottom:24px; left:50%; transform:translateX(-50%); z-index:99999; background:#3b82f6; color:white; padding:14px 28px; border-radius:50px; box-shadow:0 12px 30px rgba(0,0,0,0.4); font-family:'Plus Jakarta Sans', sans-serif; cursor:pointer; align-items:center; gap:12px; font-weight:bold; border: 2px solid rgba(255,255,255,0.2); transition: all 0.3s ease;">
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        <span>INSTAL APLIKASI</span>
-    </div>
-
-    <script>
-      let deferredPrompt;
-      const installBanner = document.getElementById('pwa-install-banner');
-
-      // Register Service Worker
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js')
-            .then(reg => console.log('PWA Registered Successfully'))
-            .catch(err => console.log('PWA Registration Failed', err));
-        });
-      }
-
-      // Capture the install prompt event
-      window.addEventListener('beforeinstallprompt', (e) => {
-        e.preventDefault();
-        deferredPrompt = e;
-        // Show the banner
-        installBanner.style.display = 'flex';
-      });
-
-      // Handle the install button click
-      installBanner.addEventListener('click', async () => {
-        if (deferredPrompt) {
-          deferredPrompt.prompt();
-          const { outcome } = await deferredPrompt.userChoice;
-          console.log(`User response to install: ${outcome}`);
-          deferredPrompt = null;
-          installBanner.style.display = 'none';
-        }
-      });
-
-      // Hide if already installed
-      window.addEventListener('appinstalled', () => {
-        installBanner.style.display = 'none';
-        deferredPrompt = null;
-        console.log('PWA was installed');
-      });
     </script>
 </body>
 </html>
